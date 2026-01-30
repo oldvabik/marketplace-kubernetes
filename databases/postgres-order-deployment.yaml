@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-order
+  namespace: marketplace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-order
+  template:
+    metadata:
+      labels:
+        app: postgres-order
+    spec:
+      containers:
+        - name: postgres-order
+          image: postgres:17
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: order_db
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_USERNAME
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+          volumeMounts:
+            - name: postgres-order-storage
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: postgres-order-storage
+          persistentVolumeClaim:
+            claimName: postgres-order-pvc
